@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VenueFlow — Smart Stadium Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/main.css?v=6" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <span class="logo-text">VENUE<span class="logo-accent">FLOW</span></span>
+        </div>
+        <div class="live-badge">
+          <span class="pulse-dot"></span>
+          LIVE
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="venue-selector-wrap">
+          <select id="venueSelect" class="venue-selector">
+            <option value="wankhede">🏟️ Wankhede Stadium</option>
+            <option value="eden">🏟️ Eden Gardens</option>
+            <option value="narendra">🏟️ Narendra Modi Stadium</option>
+            <option value="dY">🏟️ DY Patil Stadium</option>
+          </select>
+        </div>
+        <div class="game-clock">
+          <span class="game-phase" id="gamePhase">Q2 · 18:34</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Game Timeline Bar -->
+    <div class="timeline-bar">
+      <div class="timeline-label">MATCH PHASE</div>
+      <div class="timeline-phases">
+        <button class="phase-btn" data-phase="pregame">Pre-Game</button>
+        <button class="phase-btn active" data-phase="q1">1st Inn</button>
+        <button class="phase-btn" data-phase="q2">Drinks Break</button>
+        <button class="phase-btn" data-phase="half">Lunch</button>
+        <button class="phase-btn" data-phase="q3">2nd Inn</button>
+        <button class="phase-btn" data-phase="q4">Final Over</button>
+        <button class="phase-btn" data-phase="postgame">Post-Game</button>
+      </div>
+    </div>
+
+    <!-- Alert Ticker -->
+    <div class="alert-ticker" id="alertTicker">
+      <span class="ticker-label">⚡ LIVE</span>
+      <div class="ticker-scroll">
+        <span class="ticker-content" id="tickerContent"></span>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="map">
+        <span class="tab-icon">🗺️</span>
+        <span class="tab-label">Map</span>
+      </button>
+      <button class="tab-btn" data-tab="queues">
+        <span class="tab-icon">⏱️</span>
+        <span class="tab-label">Queues</span>
+        <span class="tab-badge" id="queueBadge"></span>
+      </button>
+      <button class="tab-btn" data-tab="alerts">
+        <span class="tab-icon">🔔</span>
+        <span class="tab-label">Alerts</span>
+        <span class="tab-badge" id="alertBadge">3</span>
+      </button>
+      <button class="tab-btn" data-tab="ai">
+        <span class="tab-icon">🤖</span>
+        <span class="tab-label">Ask AI</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <main class="tab-content">
+
+      <!-- MAP TAB -->
+      <div class="tab-pane active" id="tab-map">
+        <div class="map-controls">
+          <div class="map-info">
+            <span class="seat-info">📍 Your Seat: <strong>Stand B · Row 12 · Seat 47</strong></span>
+          </div>
+          <div class="route-navigator">
+            <select id="routeSelect" class="venue-selector" style="font-size: 0.85rem; padding: 0.3rem 0.6rem; margin: 0 10px; width: 140px; background: #0d1526; color: #fff; border: 1px solid rgba(0, 170, 255, 0.4); outline: none; border-radius: 4px;">
+              <option value="" style="background: #0d1526;">🧭 Navigate to...</option>
+              <option value="gate" style="background: #0d1526;">Nearest Exit Gate</option>
+              <option value="restroom" style="background: #0d1526;">Nearest Restroom</option>
+              <option value="food" style="background: #0d1526;">Shortest Food Queue</option>
+            </select>
+          </div>
+          <button class="btn-outline" id="simulateBtn">⟳ Simulate Live</button>
+        </div>
+        <div class="stadium-wrap">
+          <div id="stadiumMap" class="stadium-map"></div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="legend-dot green"></span>Low (0–40%)</span>
+            <span class="legend-item"><span class="legend-dot yellow"></span>Medium (40–70%)</span>
+            <span class="legend-item"><span class="legend-dot red"></span>High (70–100%)</span>
+          </div>
+        </div>
+        <!-- Zone Tooltip -->
+        <div class="zone-tooltip hidden" id="zoneTooltip">
+          <div class="tooltip-header">
+            <span id="tooltipZone">Zone Name</span>
+            <button class="tooltip-close" id="tooltipClose">✕</button>
+          </div>
+          <div class="tooltip-body">
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Crowd Density</span>
+              <span class="tooltip-value" id="tooltipDensity">--</span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Est. Wait</span>
+              <span class="tooltip-value" id="tooltipWait">--</span>
+            </div>
+            <div class="tooltip-stat">
+              <span class="tooltip-label">Suggestion</span>
+              <span class="tooltip-value suggestion" id="tooltipSuggestion">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUEUES TAB -->
+      <div class="tab-pane" id="tab-queues">
+        <div class="queues-header">
+          <h2 class="section-title">Live Queue Predictor</h2>
+          <div class="queue-summary" id="queueSummary"></div>
+        </div>
+        <div class="queue-grid" id="queueGrid"></div>
+      </div>
+
+      <!-- ALERTS TAB -->
+      <div class="tab-pane" id="tab-alerts">
+        <div class="alerts-header">
+          <h2 class="section-title">Smart Alerts</h2>
+          <button class="btn-primary" id="genAlertBtn">
+            <span id="genAlertText">✨ Generate AI Alert</span>
+          </button>
+        </div>
+        <div class="alerts-list" id="alertsList"></div>
+      </div>
+
+      <!-- AI CHATBOT TAB -->
+      <div class="tab-pane" id="tab-ai">
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="ai-avatar">⚡</div>
+            <div class="ai-info">
+              <div class="ai-name">VenueFlow AI</div>
+              <div class="ai-status">
+                <span class="status-dot"></span> Online · Monitoring 47 zones
+              </div>
+            </div>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+              <div class="message-bubble">
+                👋 Hey! I'm your AI stadium companion. I have live data on crowd density, queue times, and venue conditions. Ask me anything!
+              </div>
+            </div>
+          </div>
+          <div class="quick-replies" id="quickReplies">
+            <button class="quick-btn">Best restroom now?</button>
+            <button class="quick-btn">Shortest food queue?</button>
+            <button class="quick-btn">Beat the lunch rush</button>
+            <button class="quick-btn">When should I leave?</button>
+            <button class="quick-btn">Nearest parking exit?</button>
+          </div>
+          <div class="chat-input-wrap">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ask about queues, routes, timing…" />
+            <button class="chat-send" id="chatSend">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="data/venueData.js"></script>
+  <script src="app.js?v=4"></script>
+</body>
+</html>
