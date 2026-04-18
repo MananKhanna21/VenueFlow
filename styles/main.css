@@ -29,6 +29,7 @@ html, body {
   color: var(--white);
   font-family: var(--font-body);
   font-size: 14px;
+}
 body {
   margin: 0;
   display: flex;

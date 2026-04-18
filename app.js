@@ -183,7 +183,7 @@ function renderMap() {
     ellipse.setAttribute("cx", "50"); ellipse.setAttribute("cy", "50");
     ellipse.setAttribute("rx", ring.rx); ellipse.setAttribute("ry", ring.ry);
     ellipse.setAttribute("fill", "none");
-    ellipse.setAttribute("stroke", \`rgba(0,170,255,\${ring.o})\`);
+    ellipse.setAttribute("stroke", `rgba(0,170,255,${ring.o})`);
     ellipse.setAttribute("stroke-width", ring.sw);
     ellipse.setAttribute("stroke-dasharray", "4, 2");
     svg.appendChild(ellipse);
