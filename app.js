@@ -267,7 +267,7 @@ function renderMap() {
       text.setAttribute("y", zone.y + zone.h / 2 + 1.2);
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("fill", "#ffffff");
-      text.setAttribute("font-size", "2.4");
+      text.setAttribute("font-size", zone.w < 13 ? "1.8" : "2.3");
       text.setAttribute("font-weight", "600");
       text.setAttribute("font-family", "DM Sans");
       text.style.pointerEvents = "none";
@@ -281,7 +281,7 @@ function renderMap() {
         densText.setAttribute("y", zone.y + zone.h / 2 + 3.8);
         densText.setAttribute("text-anchor", "middle");
         densText.setAttribute("fill", theme.stroke);
-        densText.setAttribute("font-size", "2.0");
+        densText.setAttribute("font-size", zone.w < 13 ? "1.6" : "2.0");
         densText.setAttribute("font-family", "JetBrains Mono");
         densText.setAttribute("font-weight", "700");
         densText.style.pointerEvents = "none";
