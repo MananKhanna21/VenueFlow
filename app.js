@@ -18,12 +18,7 @@ let state = {
 };
 
 function getApiKey() {
-  let key = localStorage.getItem("ANTHROPIC_API_KEY");
-  if (!key) {
-    key = prompt("Please enter your Anthropic API Key (or leave blank to use simulated offline responses):");
-    if (key) localStorage.setItem("ANTHROPIC_API_KEY", key);
-  }
-  return key || null;
+  return localStorage.getItem("ANTHROPIC_API_KEY") || null;
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
