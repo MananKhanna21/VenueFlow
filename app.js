@@ -14,7 +14,17 @@ let state = {
   tickerInterval: null,
   phaseLabel: "1st Innings",
   currentRouteType: "",
+  matchSeconds: 18 * 60 + 34,
 };
+
+function getApiKey() {
+  let key = localStorage.getItem("ANTHROPIC_API_KEY");
+  if (!key) {
+    key = prompt("Please enter your Anthropic API Key (or leave blank to use simulated offline responses):");
+    if (key) localStorage.setItem("ANTHROPIC_API_KEY", key);
+  }
+  return key || null;
+}
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -67,6 +77,16 @@ const PHASE_NAMES = {
   postgame: "Post-Match",
 };
 
+const PHASE_TIMES = {
+  pregame: 0,
+  q1: 15 * 60,
+  q2: 45 * 60,
+  half: 90 * 60,
+  q3: 135 * 60,
+  q4: 195 * 60,
+  postgame: 210 * 60,
+};
+
 function initPhaseButtons() {
   document.querySelectorAll(".phase-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -74,6 +94,7 @@ function initPhaseButtons() {
       btn.classList.add("active");
       state.phase = btn.dataset.phase;
       state.phaseLabel = PHASE_NAMES[state.phase];
+      state.matchSeconds = PHASE_TIMES[state.phase] || 0;
       applyPhaseModifiers(state.phase);
       renderMap();
       renderQueues();
@@ -489,9 +510,17 @@ function renderQueues() {
 
 async function askClaudeForTip(zone, density, wait, phase) {
   try {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("No API key");
+
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerously-allow-browser": "true"
+      },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1000,
@@ -501,6 +530,7 @@ async function askClaudeForTip(zone, density, wait, phase) {
         }]
       })
     });
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
     const data = await res.json();
     return data.content?.[0]?.text?.trim() || "Try visiting after the current game action settles.";
   } catch {
@@ -569,9 +599,17 @@ async function generateAIAlert() {
   const snapshot = state.zones.slice(0, 8).map(z => `${z.label}: ${z.density}%`).join(", ");
 
   try {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("No API key");
+
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerously-allow-browser": "true"
+      },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1000,
@@ -581,6 +619,7 @@ async function generateAIAlert() {
         }]
       })
     });
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
     const data = await res.json();
     const alertText = data.content?.[0]?.text?.trim() || "Stay alert for crowd updates.";
     const types = ["red", "yellow", "green", "blue"];
@@ -626,12 +665,11 @@ function updateTicker() {
 
 // ─── Game Clock ───────────────────────────────────────────────────────────────
 function startGameClock() {
-  let seconds = 18 * 60 + 34;
   setInterval(() => {
-    seconds = (seconds + 1) % (50 * 60);
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    document.getElementById("gamePhase").textContent = `${state.phaseLabel.split(" ")[0]} · ${m}:${s}`;
+    state.matchSeconds = (state.matchSeconds + 1) % (400 * 60);
+    const m = Math.floor(state.matchSeconds / 60).toString().padStart(2, "0");
+    const s = (state.matchSeconds % 60).toString().padStart(2, "0");
+    document.getElementById("gamePhase").textContent = `${state.phaseLabel} · ${m}:${s}`;
   }, 1000);
 }
 
@@ -742,12 +780,21 @@ Live zone data: ${crowdSnap}
 Instructions: Be concise (2-4 sentences max), helpful, and specific. Always give actionable advice. Use specific zone names. If someone asks what's best, compare 2-3 options. Be friendly but brief — people are at a match!`;
 
   try {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("No API key");
+
     const messages = state.chatHistory.slice(-6);
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerously-allow-browser": "true"
+      },
       body: JSON.stringify({ model: MODEL, max_tokens: 1000, system: systemPrompt, messages })
     });
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
     const data = await res.json();
     const reply = data.content?.[0]?.text?.trim() || "I'm having trouble fetching live data. Please check the map tab.";
     state.chatHistory.push({ role: "assistant", content: reply });
